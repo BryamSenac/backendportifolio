@@ -5,8 +5,8 @@ const app = express();
 const hostname = '127.0.0.1';
 const port = 3000;
 
-class Projeto{
-    constructor(titulo, descricao, img){
+class Projeto {
+    constructor(titulo, descricao, img) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.img = img;
@@ -26,26 +26,34 @@ let projetos = [
 ];
 
 app.use(cors());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-app.get('/pegaCards', (req, res) =>{
-    res.status(200).json({projetos});
+app.get('/pegaCards', (req, res) => {
+    res.status(200).json({ projetos });
 });
 
-app.post('/addCard', (rq, res)=>{
-    const nome = req.query.nome;
-    const descricao = req.query.descricao;
-    const img = req.query.img;
+app.post('/addCard', (req, res) => {
+    const { nome, descricao, img } = req.body;
 
-    projetos.push(new Projeto(nome, descricao, img));
-    res.status(201).json({message: 'deu boa!!!', nome: nome, descricao:descricao, img:img,});
+    if (nome && descricao && img) {
+        const novoProjeto = new Projeto(nome, descricao, img);
+        projetos.push(novoProjeto);
+        res.status(201).json({ message: 'Projeto adicionado com sucesso!', projeto: novoProjeto });
+    } else {
+        res.status(400).json({ error: 'Faltando dados obrigatórios' });
+    }
 });
 
-app.post('/deleteCard', (req, res)=>{
-    const valor = req.query.card;
-    const index = projetos.findIndex(p => p.nome == valor);
-    projetos.splice(index, 1);
-    res.status(201).json({message: 'deu boa!!!', nome: projetos[index].nome, descricao: projetos[index].descricao, img: projetos[index].img});
+app.post('/deleteCard', (req, res) => {
+    const { card } = req.body;
+    const index = projetos.findIndex(p => p.titulo === card);
+    if (index !== -1) {
+        const projetoRemovido = projetos.splice(index, 1);
+        res.status(200).json({ message: 'Projeto removido com sucesso!', projeto: projetoRemovido });
+    } else {
+        res.status(400).json({ error: 'Projeto não encontrado' });
+    }
 });
 
 app.use((req, res) => {
@@ -53,5 +61,5 @@ app.use((req, res) => {
 });
 
 app.listen(port, hostname, () => {
-    console.log(`Server rodano em http://${hostname}:${port}/`);
+    console.log(`Server rodando em http://${hostname}:${port}/`);
 });
